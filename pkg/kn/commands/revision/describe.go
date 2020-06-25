@@ -31,6 +31,7 @@ import (
 	"knative.dev/client/pkg/kn/commands"
 	"knative.dev/client/pkg/printers"
 	clientserving "knative.dev/client/pkg/serving"
+	clientservingv1 "knative.dev/client/pkg/serving/v1"
 )
 
 // Matching image digest
@@ -63,6 +64,22 @@ func NewRevisionDescribeCommand(p *commands.KnParams) *cobra.Command {
 			}
 
 			if machineReadablePrintFlags.OutputFlagSpecified() {
+				output, err := cmd.Flags().GetString("output")
+				if err != nil {
+					return err
+				}
+
+				output = strings.ToLower(output)
+				if output == "url" {
+					url, err := extractServiceURL(client, revision)
+					if err != nil {
+						return err
+					}
+
+					fmt.Fprintln(cmd.OutOrStdout(), url)
+					return nil
+				}
+
 				printer, err := machineReadablePrintFlags.ToPrinter()
 				if err != nil {
 					return err
@@ -303,4 +320,18 @@ func stringifyEnvFrom(revision *servingv1.Revision) []string {
 		}
 	}
 	return result
+}
+
+func extractServiceURL(client clientservingv1.KnServingClient, revision *servingv1.Revision) (string, error) {
+	var service *servingv1.Service
+	var err error
+	serviceName, ok := revision.Labels[serving.ServiceLabelKey]
+	if ok {
+		service, err = client.GetService(serviceName)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return service.Status.URL.String(), nil
 }

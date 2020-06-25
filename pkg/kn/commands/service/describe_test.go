@@ -541,6 +541,23 @@ func TestServiceDescribeRevisionUnknown(t *testing.T) {
 	r.Validate()
 }
 
+func TestServiceDescribeOutputURL(t *testing.T) {
+	client := knclient.NewMockKnServiceClient(t)
+
+	// Recording:
+	r := client.Recorder()
+
+	// Prepare service
+	expectedService := createTestService("foo", []string{"rev1", "rev2"}, goodConditions())
+	r.GetService("foo", &expectedService, nil)
+
+	output, err := executeServiceCommand(client, "describe", "foo", "-o", "url")
+	assert.NilError(t, err)
+	assert.Assert(t, util.ContainsAll(output, "https://foo.default.example.com"))
+
+	r.Validate()
+}
+
 func createTestService(name string, revisionNames []string, conditions duckv1.Conditions) servingv1.Service {
 
 	labelMap := make(map[string]string)

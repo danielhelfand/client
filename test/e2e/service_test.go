@@ -48,6 +48,9 @@ func TestService(t *testing.T) {
 	t.Log("return valid info about hello service with print flags")
 	serviceDescribeWithPrintFlags(r, "hello")
 
+	t.Log("return valid info about hello service with print flags")
+	serviceDescribeWithOutputURL(r, "hello")
+
 	t.Log("delete hello service repeatedly and get an error")
 	test.ServiceDelete(r, "hello")
 	serviceDeleteNonexistent(r, "hello")
@@ -117,6 +120,13 @@ func serviceDescribeWithPrintFlags(r *test.KnRunResultCollector, serviceName str
 
 	expectedName := fmt.Sprintf("service.serving.knative.dev/%s", serviceName)
 	assert.Equal(r.T(), strings.TrimSpace(out.Stdout), expectedName)
+}
+
+func serviceDescribeWithOutputURL(r *test.KnRunResultCollector, serviceName string) {
+	out := r.KnTest().Kn().Run("service", "describe", serviceName, "-o=url")
+	r.AssertNoError(out)
+
+	assert.Check(r.T(), strings.Contains(out.Stdout, "http", serviceName), "Failed to show URL from kn service describe using --output url")
 }
 
 func serviceDeleteNonexistent(r *test.KnRunResultCollector, serviceName string) {

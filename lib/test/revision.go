@@ -139,3 +139,20 @@ func RevisionListWithService(r *KnRunResultCollector, serviceNames ...string) {
 		}
 	}
 }
+
+// RevisionDescribeOutputURL verifies Service URL is returned from revision using '--output url'
+func RevisionDescribeOutputURL(r *KnRunResultCollector, revisionName string, serviceName string) {
+	// Verify revision is associated with service
+	out := r.KnTest().Kn().Run("revision", "describe", revisionName)
+	r.AssertNoError(out)
+	assert.Check(r.T(), util.ContainsAll(out.Stdout, revisionName, serviceName))
+
+	// Get service url from kn service describe [serviceName] --output url (should be same as kn revision describe -o url)
+	serviceURL := r.KnTest().Kn().Run("service", "describe", serviceName, "--output", "url")
+	r.AssertNoError(serviceURL)
+
+	// Assert that kn revision describe [revisionName] -o url contains service url
+	out = r.KnTest().Kn().Run("revision", "describe", revisionName, "--output", "url")
+	r.AssertNoError(out)
+	assert.Check(r.T(), util.ContainsAll(out.Stdout, serviceURL.Stdout))
+}

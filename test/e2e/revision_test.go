@@ -43,6 +43,7 @@ func TestRevision(t *testing.T) {
 	revName := test.FindRevision(r, "hello")
 	test.RevisionListOutputName(r, revName)
 	test.RevisionDescribeWithPrintFlags(r, revName)
+	test.RevisionDescribeOutputURL(r, revName, "hello")
 
 	t.Log("update hello service and increase revision count to 2")
 	test.ServiceUpdate(r, "hello", "--env", "TARGET=kn", "--port", "8888")
